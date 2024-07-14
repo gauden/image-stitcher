@@ -15,25 +15,20 @@ def stitch_images(images, pad_or_scale, scale_percentage, border_width, resoluti
         ]
         widths, heights = zip(*(i.size for i in images))
 
-    if pad_or_scale == "Scale":
-        max_height = max(heights)
-        images = [
-            ImageOps.fit(
-                image,
-                (image.width, max_height),
-                method=Image.Resampling.LANCZOS,
-                bleed=0.0,
-                centering=(0.5, 0.5),
-            )
-            for image in images
-        ]
-    else:
-        max_height = max(heights)
-        images = [
-            ImageOps.pad(image, (image.width, max_height), color="white")
-            for image in images
-        ]
+    max_height = max(heights)
 
+    # Scale shorter images to match the height of the tallest image
+    if pad_or_scale == "Scale":
+        scaled_images = []
+        for image in images:
+            if image.height < max_height:
+                new_width = int(image.width * (max_height / image.height))
+                image = image.resize((new_width, max_height), Image.Resampling.LANCZOS)
+            scaled_images.append(image)
+        images = scaled_images
+        widths, heights = zip(*(i.size for i in images))
+
+    # Calculate the total width after resizing
     total_width = sum(image.width for image in images)
     final_width = int(total_width * (scale_percentage / 100))
     final_height = int(max_height * (scale_percentage / 100))
@@ -121,7 +116,18 @@ def main():
         )
 
         if resolution == "Original Resolution":
-            final_width = sum(image.size[0] for image in reordered_images)
+            if pad_or_scale == "Scale":
+                max_height = max(image.height for image in reordered_images)
+                final_width = sum(
+                    (
+                        int(image.width * (max_height / image.height))
+                        if image.height < max_height
+                        else image.width
+                    )
+                    for image in reordered_images
+                )
+            else:
+                final_width = sum(image.width for image in reordered_images)
             final_height = max(image.size[1] for image in reordered_images)
         else:
             final_width = int(
