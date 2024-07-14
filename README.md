@@ -17,7 +17,7 @@ This Streamlit app allows users to upload multiple images, adjust their order, c
 
 1. **Clone the Repository**:
     ```bash
-    git clone https://github.com/your-username/image-stitcher-app.git
+    git clone https://github.com/gauden/image-stitcher-app.git
     cd image-stitcher-app
     ```
 
